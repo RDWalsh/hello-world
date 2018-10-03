@@ -1,0 +1,5 @@
+# This file contains properties for DEV environment
+# Properties for HTTP Listener
+http:
+  host: "0.0.0.0"
+  port: "8086"

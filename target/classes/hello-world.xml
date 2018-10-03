@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="d2ec8d52-7955-4cea-91ab-5ce927ec7d6e" >
+		<http:listener-connection host="${http.host}" port="${http.port}" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="a10e17bd-7713-4cbc-a93a-b8f0028d7db0" file="app-config.yaml" />
+	<flow name="hello-worldFlow" doc:id="9afb9c77-e77e-422a-a2ed-edc592f1d0b1" >
+		<http:listener doc:name="Listener" doc:id="1b655806-8b93-4619-bd25-fcbc611a8522" config-ref="HTTP_Listener_config" path="/hello/{mascotType}" allowedMethods="POST"/>
+		<set-variable value="#[attributes.queryParams.mascotName default 'Maxine']" doc:name="mascot FirstName" doc:id="9b3dbb44-83be-401f-94a1-93a8a50d1f49" variableName="mascotFirstName"/>
+		<ee:transform doc:name="Transform Message" doc:id="43537ce5-3dbe-4484-a6c7-50f2f02c0543" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="mascotProps" ><![CDATA[%dw 2.0
+output application/java
+---
+otherVars: {
+	mascotType: attributes.uriParams.'mascotType',
+	mascotColor: attributes.headers.'color' default 'Red'
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<set-payload value="#[output application/json ---
+{
+	mascotFirstName: vars.mascotFirstName,
+	mascotType: vars.mascotProps.otherVars.mascotType,
+	mascotColor: vars.mascotProps.othervars.mascotColor,
+	greeting: payload.greeting,
+	myLastName: payload.'lastName'
+}]" doc:name="Set Payload" doc:id="a0b97af6-2ac9-403a-ab7c-ade4fc2db649" />
+		<logger level="INFO" doc:name="Logger" doc:id="28c8eb76-f7d7-4744-9c7f-c0e67931d778" message="#[message.payload]"/>
+	</flow>
+</mule>
